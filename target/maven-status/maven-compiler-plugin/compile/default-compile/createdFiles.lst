@@ -15,8 +15,8 @@ com\mycompany\mavenproject3\Customer.class
 com\mycompany\mavenproject3\FormPenjualan$2.class
 com\mycompany\mavenproject3\ProductForm.class
 com\mycompany\mavenproject3\loginService.class
+com\mycompany\mavenproject3\LoginController$LoginRequest.class
 com\mycompany\mavenproject3\Mavenproject3$BannerPanel.class
 com\mycompany\mavenproject3\Main.class
 com\mycompany\mavenproject3\LoginController.class
-com\mycompany\mavenproject3\db.class
 com\mycompany\mavenproject3\FormPenjualan.class

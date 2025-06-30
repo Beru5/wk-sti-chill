@@ -41,33 +41,19 @@ public class login extends JFrame {
 
         LoginButton.addActionListener(e -> checkLogin());
     }
-
     private void checkLogin() {
         String username = UsernameField.getText();
-        String password = String.valueOf(PasswordField.getPassword());
+        String password = new String(PasswordField.getPassword());
 
-        try (Connection conn = db.connect()) {
-            String sql = "SELECT * FROM admin WHERE username=? AND password=?";
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setString(1, username);
-            ps.setString(2, password);
-            ResultSet rs = ps.executeQuery();
+        Admin admin = loginService.login(username, password);
 
-        if (rs.next()) {
-            Session.username = rs.getString("username");
-
-            JOptionPane.showMessageDialog(this, "Login berhasil, Selamat Datang Tuan " + Session.username);
-
+        if (admin != null) {
+            Session.username = admin.getUsername();
+            JOptionPane.showMessageDialog(this, "Login berhasil, Selamat Datang Tuan " + Session.getUsername());
             this.dispose();
-            new Mavenproject3(Session.username).setVisible(true); 
-            }
-
-             else {
-                JOptionPane.showMessageDialog(this, "Username atau password salah.");
-            }
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage());
+            new Mavenproject3(Session.username).setVisible(true);
+        } else {
+            JOptionPane.showMessageDialog(this, "Username atau password salah.");
         }
-        
-}
     }
+}
