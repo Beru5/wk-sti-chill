@@ -17,11 +17,12 @@ public class loginService {
             conn.setRequestProperty("Content-Type", "application/json");
             conn.setDoOutput(true);
 
-            String urlParams = "username=" + URLEncoder.encode(username, "UTF-8") +
-                               "&password=" + URLEncoder.encode(password, "UTF-8");
+            // Create JSON request body
+            String jsonInputString = "{\"username\":\"" + username + "\",\"password\":\"" + password + "\"}";
 
             try (OutputStream os = conn.getOutputStream()) {
-                os.write(urlParams.getBytes());
+                byte[] input = jsonInputString.getBytes("utf-8");
+                os.write(input, 0, input.length);
             }
 
             if (conn.getResponseCode() == 200) {

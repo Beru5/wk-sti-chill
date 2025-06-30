@@ -20,23 +20,23 @@ public class LoginController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
-        try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/wk sti", "root", "");
-             PreparedStatement stmt = conn.prepareStatement("SELECT * FROM admin WHERE username = ? AND password = ?")) {
+public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
+    try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/wk sti", "root", "");
+         PreparedStatement stmt = conn.prepareStatement("SELECT * FROM admin WHERE username = ? AND password = ?")) {
 
-            stmt.setString(1, loginRequest.username);
-            stmt.setString(2, loginRequest.password);
-            ResultSet rs = stmt.executeQuery();
+        stmt.setString(1, loginRequest.username);
+        stmt.setString(2, loginRequest.password);
+        ResultSet rs = stmt.executeQuery();
 
-            if (rs.next()) {
-                Map<String, String> result = new HashMap<>();
-                result.put("Welcome, ", rs.getString("username"));
-                return ResponseEntity.ok(result);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (rs.next()) {
+            Admin admin = new Admin();
+            admin.setUsername(rs.getString("username"));
+            return ResponseEntity.ok(admin);
         }
-
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Login gagal");
+    } catch (Exception e) {
+        e.printStackTrace();
     }
+
+    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Login gagal");
+}
 }

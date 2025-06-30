@@ -5,13 +5,13 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import java.awt.*;
-import java.time.LocalDate; // Import LocalDate
-import java.time.format.DateTimeParseException; // Import for date parsing errors
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 
 public class CustomerForm extends JFrame {
     private JTextField namaField;
     private JTextField telpField;
-    private JTextField ultahField; // Field untuk tanggal ulang tahun
+    private JTextField ultahField;
     private JTable table;
     private DefaultTableModel tableModel;
     private JButton addButton;
@@ -24,13 +24,13 @@ public class CustomerForm extends JFrame {
         this.gui = gui;
 
         setTitle("WK. Cuan | Daftar Pelanggan");
-        setSize(600, 400); // Sesuaikan ukuran frame
+        setSize(600, 400);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
         JPanel formPanel = new JPanel();
-        formPanel.setLayout(new GridLayout(0, 2, 5, 5)); // GridLayout dengan 2 kolom
+        formPanel.setLayout(new GridLayout(0, 2, 5, 5));
 
         formPanel.add(new JLabel("Nama Pelanggan:"));
         namaField = new JTextField();
@@ -40,11 +40,10 @@ public class CustomerForm extends JFrame {
         telpField = new JTextField();
         formPanel.add(telpField);
 
-        formPanel.add(new JLabel("Tanggal Ulang Tahun (YYYY-MM-DD):")); // Label untuk ultah
+        formPanel.add(new JLabel("Tanggal Ulang Tahun (YYYY-MM-DD):"));
         ultahField = new JTextField();
-        formPanel.add(ultahField); // Field untuk ultah
+        formPanel.add(ultahField);
 
-        // Panel untuk tombol agar rapi
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         addButton = new JButton("Tambah");
         editButton = new JButton("Edit");
@@ -56,16 +55,13 @@ public class CustomerForm extends JFrame {
         add(formPanel, BorderLayout.NORTH);
         add(buttonPanel, BorderLayout.SOUTH);
 
-        // Setup table
-        tableModel = new DefaultTableModel(new Object[]{"ID", "Nama", "Telepon", "Tanggal Lahir"}, 0); // Tambah kolom "Tanggal Lahir"
+        tableModel = new DefaultTableModel(new Object[]{"ID", "Nama", "Telepon", "Tanggal Lahir"}, 0);
         table = new JTable(tableModel);
         JScrollPane scrollPane = new JScrollPane(table);
         add(scrollPane, BorderLayout.CENTER);
 
-        // Load initial data
         loadCustomerData();
 
-        // Add table selection listener to populate fields for editing
         table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
@@ -73,8 +69,6 @@ public class CustomerForm extends JFrame {
                     int selectedRow = table.getSelectedRow();
                     namaField.setText(tableModel.getValueAt(selectedRow, 1).toString());
                     telpField.setText(tableModel.getValueAt(selectedRow, 2).toString());
-                    // Ambil data ultah dari model dan set ke field
-                    // Cek jika LocalDate, format ke String
                     Object ultahObj = tableModel.getValueAt(selectedRow, 3);
                     if (ultahObj instanceof LocalDate) {
                          ultahField.setText(((LocalDate) ultahObj).toString());
@@ -87,7 +81,6 @@ public class CustomerForm extends JFrame {
             }
         });
 
-        // Action Listeners for buttons
         addButton.addActionListener(e -> {
             String nama = namaField.getText().trim();
             String telp = telpField.getText().trim();
@@ -99,8 +92,7 @@ public class CustomerForm extends JFrame {
             }
 
             try {
-                // Validasi format tanggal
-                LocalDate.parse(ultah); // Coba parse untuk validasi
+                LocalDate.parse(ultah);
                 Customer newCustomer = new Customer(nama, telp, ultah);
                 CustomerManager.addCustomer(newCustomer);
                 loadCustomerData();
@@ -131,8 +123,7 @@ public class CustomerForm extends JFrame {
             }
 
             try {
-                LocalDate.parse(ultah); // Coba parse untuk validasi
-                // Ambil ID dari customer yang sudah ada
+                LocalDate.parse(ultah);
                 int customerId = (int) tableModel.getValueAt(selectedRow, 0);
                 Customer updatedCustomer = new Customer(customerId, nama, telp, ultah);
                 CustomerManager.editCustomer(selectedRow, updatedCustomer);
@@ -157,15 +148,14 @@ public class CustomerForm extends JFrame {
                 loadCustomerData();
                 namaField.setText("");
                 telpField.setText("");
-                ultahField.setText(""); // Bersihkan field ultah
+                ultahField.setText("");
             }
         });
     }
 
     private void loadCustomerData() {
-        tableModel.setRowCount(0); // Clear existing data
+        tableModel.setRowCount(0);
         for (Customer c : CustomerManager.getCustomers()) {
-            // Pastikan data ultah ditampilkan dengan benar, bisa berupa LocalDate atau String
             tableModel.addRow(new Object[]{c.getId(), c.getNama(), c.getTelp(), c.getUltah()}); 
         }
     }
