@@ -12,7 +12,7 @@ public class Main {
     public static void main(String[] args) {
         SpringApplication.run(Main.class, args);
         javax.swing.SwingUtilities.invokeLater(() -> {
-            new login().setVisible(true);
+            new Login().setVisible(true);
         });
     }
 }

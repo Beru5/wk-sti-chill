@@ -181,7 +181,7 @@ public class FormPenjualan extends JFrame {
                 JOptionPane.showMessageDialog(this, "Tidak ada produk yang dipilih.");
                 return;
             }
-            Product selectedProduct = ProductManager.products.get(selectedIndex);
+            Product selectedProduct = ProductManager.getProducts().get(selectedIndex);
 
             int qty;
             try {
@@ -284,76 +284,79 @@ public class FormPenjualan extends JFrame {
                 updateTotal();
             }
         });
-        // This is called after customerTelpField is initialized, so it's safe now.
-
-
-        processButton.addActionListener(e -> {
-            if (cartTableModel.getRowCount() == 0) {
-                JOptionPane.showMessageDialog(this, "Keranjang kosong!");
-                return;
-            }
-
-            String customerTelp = customerTelpField.getText().trim();
-
-            Customer customer = null;
-
-            if (customerTelp.isEmpty()) {
-                promoComboBox.setSelectedIndex(0);
-                updateTotal();
-            } else {
-                for (Customer c : CustomerManager.getCustomers()) {
-                    if (c.getTelp().equals(customerTelp)) {
-                        customer = c;
-                        break;
-                    }
-                }
-
-                if (customer == null) {
-                    JOptionPane.showMessageDialog(this, "No. Telepon belum terdaftar sebagai pelanggan.", "Pelanggan Tidak Ditemukan", JOptionPane.WARNING_MESSAGE);
-                    return;
-                }
-            }
-
-            for (int i = 0; i < cartTableModel.getRowCount(); i++) {
-                String prodNama = (String) cartTableModel.getValueAt(i, 0);
-                int qty = (int) cartTableModel.getValueAt(i, 1);
-
-                for (Product p : ProductManager.products) {
-                    if (p.getName().equals(prodNama)) {
-                        p.setStock(p.getStock() - qty);
-                        break;
-                    }
-                }
-            }
-
-            // After successful transaction, check for promo usage and decrement stock if applicable
-            Promo selectedPromo = (Promo) promoComboBox.getSelectedItem();
-            if (selectedPromo != null && !selectedPromo.getNama().equals("Tidak Ada Promo")) {
-                // Find the actual promo object in PromoManager to update its stock
-                Promo actualPromoInManager = PromoManager.getPromoByName(selectedPromo.getNama());
-                if (actualPromoInManager != null && actualPromoInManager.getStokPromo() > 0) {
-                    int promoIndex = PromoManager.getPromos().indexOf(actualPromoInManager);
-                    if (promoIndex != -1) {
-                        Promo updatedPromo = new Promo(
-                            actualPromoInManager.getNama(),
-                            actualPromoInManager.getDiskon(),
-                            actualPromoInManager.getStokPromo() - 1, // Decrement stock
-                            actualPromoInManager.getTanggalAkhir().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-                        );
-                        PromoManager.editPromo(promoIndex, updatedPromo);
-                    }
-                }
-            }
-
-            JOptionPane.showMessageDialog(this, "Transaksi berhasil!");
-            cartTableModel.setRowCount(0);
-            updateFields();
-            updateTotal();
-            ProductForm.loadProductData();
-            refreshPromoComboBox(); // Refresh promos after potential stock change
-            customerTelpField.setText("");
-        });
+        
+processButton.addActionListener(e -> {
+    if (cartTableModel.getRowCount() == 0) {
+        JOptionPane.showMessageDialog(this, "Keranjang kosong!");
+        return;
     }
+
+    // Validasi pelanggan
+    String customerTelp = customerTelpField.getText().trim();
+    if (!customerTelp.isEmpty()) {
+        boolean customerExists = CustomerManager.getCustomers().stream()
+            .anyMatch(c -> c.getTelp().equals(customerTelp));
+        if (!customerExists) {
+            JOptionPane.showMessageDialog(this, 
+                "No. Telepon belum terdaftar", 
+                "Error", 
+                JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+    }
+
+    // Proses pengurangan stok
+    boolean allStockUpdated = true;
+    StringBuilder errorMessages = new StringBuilder();
+    
+    for (int i = 0; i < cartTableModel.getRowCount(); i++) {
+        String productName = (String) cartTableModel.getValueAt(i, 0);
+        int quantity = (int) cartTableModel.getValueAt(i, 1);
+        
+        Product product = ProductManager.findByName(productName);
+        if (product == null) {
+            errorMessages.append("Produk '").append(productName).append("' tidak ditemukan\n");
+            allStockUpdated = false;
+            continue;
+        }
+        
+        // Get the current product from database to ensure we have latest stock
+        Product currentProduct = ProductManager.getProductById(product.getId());
+        if (currentProduct == null) {
+            errorMessages.append("Produk '").append(productName).append("' tidak ditemukan di database\n");
+            allStockUpdated = false;
+            continue;
+        }
+        
+        if (!ProductManager.updateProductStock(currentProduct.getId(), quantity)) {
+            errorMessages.append("Gagal update stok '").append(productName).append("'\n");
+            allStockUpdated = false;
+        }
+    }
+
+    // Proses promo jika semua stok berhasil diupdate
+    if (allStockUpdated) {
+        Promo selectedPromo = (Promo) promoComboBox.getSelectedItem();
+        if (selectedPromo != null && !selectedPromo.getNama().equals("Tidak Ada Promo")) {
+            PromoManager.decreasePromoStock(selectedPromo.getNama());
+        }
+        
+        // Reset form jika sukses
+        cartTableModel.setRowCount(0);
+        customerTelpField.setText("");
+        JOptionPane.showMessageDialog(this, "Transaksi berhasil!");
+    } else {
+        JOptionPane.showMessageDialog(this, 
+            "Beberapa stok gagal diupdate:\n" + errorMessages.toString(), 
+            "Error", 
+            JOptionPane.ERROR_MESSAGE);
+    }
+
+    // Refresh data
+    updateTotal();
+    ProductForm.loadProductData();
+    refreshPromoComboBox();
+});}
 
     private void checkCustomerTelpStatusInitial() {
         if (customerTelpField.getText().trim().isEmpty()) {
@@ -369,13 +372,13 @@ public class FormPenjualan extends JFrame {
 
     public void updateFields() {
         int selectedIndex = namaBox.getSelectedIndex();
-        if (selectedIndex < 0 || selectedIndex >= ProductManager.products.size()) {
+        if (selectedIndex < 0 || selectedIndex >= ProductManager.getProducts().size()) {
             stockField.setText("");
             priceField.setText("");
             addToCartButton.setEnabled(false);
             return;
         }
-        Product selectedProduct = ProductManager.products.get(selectedIndex);
+        Product selectedProduct = ProductManager.getProducts().get(selectedIndex);
         stockField.setText(String.valueOf(selectedProduct.getStock()));
         priceField.setText(String.format("%,.0f", selectedProduct.getPrice()));
         addToCartButton.setEnabled(true);
@@ -383,7 +386,7 @@ public class FormPenjualan extends JFrame {
 
     public void refreshComboBox() {
         namaBox.removeAllItems();
-        if (ProductManager.products.isEmpty()) {
+        if (ProductManager.getProducts().isEmpty()) {
             stockField.setText("N/A");
             priceField.setText("N/A");
             addToCartButton.setEnabled(false);
@@ -391,7 +394,7 @@ public class FormPenjualan extends JFrame {
             namaBox.repaint();
             return;
         }
-        for (Product p : ProductManager.products) {
+        for (Product p : ProductManager.getProducts()) {
             namaBox.addItem(p.getName());
         }
         namaBox.setSelectedIndex(0);

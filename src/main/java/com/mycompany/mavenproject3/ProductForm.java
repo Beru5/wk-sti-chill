@@ -8,12 +8,12 @@ package com.mycompany.mavenproject3;
  *
  * @author ASUS
  */
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.List;
 
 public class ProductForm extends JFrame {
@@ -30,26 +30,26 @@ public class ProductForm extends JFrame {
     
     private Mavenproject3 gui;
     
-    
-
     public ProductForm(Mavenproject3 gui) {  
         this.gui = gui;
         
         setTitle("WK. Cuan | Stok Barang");
-        setSize(600, 450);
+        setSize(700, 450); // Increased width to accommodate ID column
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
         
-        // Panel form pemesanan
+        // Panel form
         JPanel formPanel = new JPanel();
         formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.Y_AXIS));
-        formPanel.add(new JLabel("Kode Barang"));
-        codeField = new JTextField(3);
+        formPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        formPanel.add(new JLabel("Kode Barang:"));
+        codeField = new JTextField();
         formPanel.add(codeField);
         
         formPanel.add(new JLabel("Nama Barang:"));
-        nameField = new JTextField(6);
+        nameField = new JTextField();
         formPanel.add(nameField);
         
         formPanel.add(new JLabel("Kategori:"));
@@ -57,137 +57,151 @@ public class ProductForm extends JFrame {
         formPanel.add(categoryField);
         
         formPanel.add(new JLabel("Harga Jual:"));
-        priceField = new JTextField(5);
+        priceField = new JTextField();
         formPanel.add(priceField);
         
         formPanel.add(new JLabel("Stok Tersedia:"));
-        stockField = new JTextField(2);
+        stockField = new JTextField();
         formPanel.add(stockField);
         
+        // Button panel
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         addButton = new JButton("Tambah");
-        formPanel.add(addButton);
         editButton = new JButton("Edit");
-        formPanel.add(editButton);
         deleteButton = new JButton("Hapus");
-        formPanel.add(deleteButton);
-
+        buttonPanel.add(addButton);
+        buttonPanel.add(editButton);
+        buttonPanel.add(deleteButton);
         
+        formPanel.add(buttonPanel);
         add(formPanel, BorderLayout.EAST);
         
-        tableModel = new DefaultTableModel(new String[]{"Kode", "Nama", "Kategori", "Harga Jual", "Stok"}, 0);
+        // Table setup
+        tableModel = new DefaultTableModel(new String[]{"ID", "Kode", "Nama", "Kategori", "Harga Jual", "Stok"}, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false; // Make all cells non-editable
+            }
+        };
+        
         drinkTable = new JTable(tableModel);
-        loadProductData();
-        add(new JScrollPane(drinkTable), BorderLayout.CENTER);
-        
-        
         drinkTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-               @Override
-               public void valueChanged(ListSelectionEvent e) {
-                   int selectedRow = drinkTable.getSelectedRow();
-                   if (selectedRow != -1) {
-                       String selectedCode = tableModel.getValueAt(selectedRow, 0).toString();
-                       String selectedName = tableModel.getValueAt(selectedRow, 1).toString();
-                       String selectedCategory = tableModel.getValueAt(selectedRow, 2).toString();
-                       String selectedPrice = tableModel.getValueAt(selectedRow, 3).toString(); 
-                       String selectedStock = tableModel.getValueAt(selectedRow, 4).toString();
-
-                       codeField.setText(selectedCode);
-                       nameField.setText(selectedName);
-                       categoryField.setSelectedItem(selectedCategory);
-                       priceField.setText(selectedPrice);
-                       stockField.setText(selectedStock);
-                   }
-               }
-           });
-
-
-         addButton.addActionListener(e -> {
-           try {
-               String code = codeField.getText();
-               String name = nameField.getText();
-               String category = categoryField.getSelectedItem().toString();
-               double price = Double.parseDouble(priceField.getText());
-               int stock = Integer.parseInt(stockField.getText());
-
-               int id = ProductManager.getProducts().size() + 1;
-               Product product = new Product(code, name, category, price, stock); 
-
-               ProductManager.addProduct(product);
-               tableModel.addRow(new Object[]{product.getCode(), product.getName(), product.getCategory(), product.getPrice(), product.getStock()});
-
-               codeField.setText("");
-               nameField.setText("");
-               priceField.setText("");
-               stockField.setText("");
-           } catch (NumberFormatException ex) {
-               JOptionPane.showMessageDialog(this, "Input harga hanya dalam bentuk angka!", "Error", JOptionPane.ERROR_MESSAGE);
-           }
-           loadProductData();
-       });
-
-         editButton.addActionListener(e -> {
-           int selectedRow = drinkTable.getSelectedRow();
-           if (selectedRow < 0) {
-               JOptionPane.showMessageDialog(this, "Pilih produk yang ingin diedit.");
-               return;
-           }
-
-           try {
-               String code = codeField.getText();
-               String name = nameField.getText();
-               String category = (String) categoryField.getSelectedItem();
-               double price = Double.parseDouble(priceField.getText());
-               int stock = Integer.parseInt(stockField.getText());
-
-               Product updatedProduct = new Product(code, name, category, price, stock);
-               ProductManager.editProduct(selectedRow, updatedProduct);
-               
-               codeField.setText("");
-               nameField.setText("");
-               priceField.setText("");
-               stockField.setText("");
-
-           } catch (NumberFormatException ex) {
-               JOptionPane.showMessageDialog(this, "Input tidak valid:\n" + ex);
-           }
-           loadProductData();
-           });
-
-          deleteButton.addActionListener(e -> {
-           int selectedRow = drinkTable.getSelectedRow();
-           if (selectedRow < 0) {
-               JOptionPane.showMessageDialog(this, "Pilih produk yang ingin dihapus.");
-               return;
-           }
-
-           try {
-               ProductManager.deleteProduct(selectedRow);
-               
-               codeField.setText("");
-               nameField.setText("");
-               priceField.setText("");
-               stockField.setText("");
-           } catch (Exception ex) {
-               JOptionPane.showMessageDialog(this, "error\n" + ex);
-           }
-           loadProductData();
-           });
-          
-          
-
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (!e.getValueIsAdjusting()) {
+                    int selectedRow = drinkTable.getSelectedRow();
+                    if (selectedRow >= 0) {
+                        codeField.setText(tableModel.getValueAt(selectedRow, 1).toString());
+                        nameField.setText(tableModel.getValueAt(selectedRow, 2).toString());
+                        categoryField.setSelectedItem(tableModel.getValueAt(selectedRow, 3));
+                        priceField.setText(tableModel.getValueAt(selectedRow, 4).toString());
+                        stockField.setText(tableModel.getValueAt(selectedRow, 5).toString());
+                    }
+                }
+            }
+        });
+        
+        JScrollPane scrollPane = new JScrollPane(drinkTable);
+        add(scrollPane, BorderLayout.CENTER);
+        
+        // Load initial data
+        loadProductData();
+        
+        // Button actions
+        setupButtonActions();
     }
     
+    private void setupButtonActions() {
+        addButton.addActionListener(e -> {
+            try {
+                Product product = new Product(
+                    codeField.getText(),
+                    nameField.getText(),
+                    categoryField.getSelectedItem().toString(),
+                    Double.parseDouble(priceField.getText()),
+                    Integer.parseInt(stockField.getText())
+                );
+                
+                ProductManager.addProduct(product);
+                loadProductData();
+                clearFields();
+            } catch (NumberFormatException ex) {
+                showError("Input harga/stok harus berupa angka!");
+            } catch (Exception ex) {
+                showError("Gagal menambah produk: " + ex.getMessage());
+            }
+        });
+        
+        editButton.addActionListener(e -> {
+            int selectedRow = drinkTable.getSelectedRow();
+            if (selectedRow < 0) {
+                showError("Pilih produk yang ingin diedit.");
+                return;
+            }
 
+            try {
+                int id = (int) tableModel.getValueAt(selectedRow, 0);
+                Product updatedProduct = new Product(
+                    id,
+                    codeField.getText(),
+                    nameField.getText(),
+                    categoryField.getSelectedItem().toString(),
+                    Double.parseDouble(priceField.getText()),
+                    Integer.parseInt(stockField.getText())
+                );
+                
+                ProductManager.editProduct(selectedRow, updatedProduct);
+                loadProductData();
+                clearFields();
+            } catch (NumberFormatException ex) {
+                showError("Input harga/stok harus berupa angka!");
+            } catch (Exception ex) {
+                showError("Gagal mengupdate produk: " + ex.getMessage());
+            }
+        });
+        
+        deleteButton.addActionListener(e -> {
+            int selectedRow = drinkTable.getSelectedRow();
+            if (selectedRow < 0) {
+                showError("Pilih produk yang ingin dihapus.");
+                return;
+            }
+
+            try {
+                ProductManager.deleteProduct(selectedRow);
+                loadProductData();
+                clearFields();
+            } catch (Exception ex) {
+                showError("Gagal menghapus produk: " + ex.getMessage());
+            }
+        });
+    }
+    
     public void loadProductData() {
         tableModel.setRowCount(0);
-        for (Product product : ProductManager.getProducts()) {
+        List<Product> products = ProductManager.getProducts();
+        for (Product product : products) {
             tableModel.addRow(new Object[]{
-                product.getCode(), product.getName(), product.getCategory(), product.getPrice(), product.getStock()
-            });}
+                product.getId(),
+                product.getCode(),
+                product.getName(),
+                product.getCategory(),
+                String.format("%,.0f", product.getPrice()),
+                product.getStock()
+            });
+        }
         gui.updateText();
+    }
     
-}
-
+    private void clearFields() {
+        codeField.setText("");
+        nameField.setText("");
+        priceField.setText("");
+        stockField.setText("");
+        drinkTable.clearSelection();
+    }
     
-    
+    private void showError(String message) {
+        JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
+    }
 }

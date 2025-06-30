@@ -1,5 +1,6 @@
 package com.mycompany.mavenproject3;
 
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,6 +30,25 @@ public class PromoManager {
         }
         return null;
     }
+    
+    public static boolean decreasePromoStock(String promoName) {
+    try {
+        Promo promo = getPromoByName(promoName);
+        if (promo == null || promo.getStokPromo() <= 0) return false;
+        
+        Promo updatedPromo = new Promo(
+            promo.getNama(),
+            promo.getDiskon(),
+            promo.getStokPromo() - 1,
+            promo.getTanggalAkhir().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        );
+        editPromo(getPromos().indexOf(promo), updatedPromo);
+        return true;
+    } catch (Exception e) {
+        e.printStackTrace();
+        return false;
+    }
+}
 
     public static void editPromo(int index, Promo updatedPromo) {
         if (index >= 0 && index < promos.size()) {
@@ -41,4 +61,6 @@ public class PromoManager {
             promos.remove(index);
         }
     }
+    
+    
 }

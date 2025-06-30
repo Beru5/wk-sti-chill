@@ -7,7 +7,7 @@ import java.io.*;
 import java.net.*;
 import com.google.gson.*;
 
-public class loginService {
+public class LoginManager {
     public static Admin login(String username, String password) {
         try {
             URL url = new URL("http://localhost:8080/api/login");

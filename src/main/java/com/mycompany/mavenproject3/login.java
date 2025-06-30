@@ -7,12 +7,12 @@ package com.mycompany.mavenproject3;
 import javax.swing.*;
 import java.sql.*;
 
-public class login extends JFrame {
+public class Login extends JFrame {
     private JTextField UsernameField;
     private JPasswordField PasswordField;
     private JButton LoginButton;
 
-    public login() {
+    public Login() {
         setTitle("Login");
         setSize(300, 180);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -45,7 +45,7 @@ public class login extends JFrame {
         String username = UsernameField.getText();
         String password = new String(PasswordField.getPassword());
 
-        Admin admin = loginService.login(username, password);
+        Admin admin = LoginManager.login(username, password);
 
         if (admin != null) {
             Session.username = admin.getUsername();
