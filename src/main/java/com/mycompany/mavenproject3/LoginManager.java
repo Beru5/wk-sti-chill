@@ -17,7 +17,6 @@ public class LoginManager {
             conn.setRequestProperty("Content-Type", "application/json");
             conn.setDoOutput(true);
 
-            // Create JSON request body
             String jsonInputString = "{\"username\":\"" + username + "\",\"password\":\"" + password + "\"}";
 
             try (OutputStream os = conn.getOutputStream()) {

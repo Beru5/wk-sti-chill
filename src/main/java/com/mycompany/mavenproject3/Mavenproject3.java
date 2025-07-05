@@ -16,15 +16,18 @@ public class Mavenproject3 extends JFrame implements Runnable {
     private JButton addProductButton;
     private JButton sellProductButton;
     private JButton customerButton;
+    private JButton promoButton;
+    private JButton logoutButton;
     private ProductForm ProductForm;
     private FormPenjualan FormPenjualan;
     private CustomerForm CustomerForm;
+    private PromoForm PromoForm;
 
     public Mavenproject3(String text) {
         this.text = text;
         setTitle("WK. STI Chill");
         setSize(600, 150);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
@@ -40,11 +43,16 @@ public class Mavenproject3 extends JFrame implements Runnable {
         bottomPanel.add(sellProductButton);
         customerButton = new JButton("Kelola Pelanggan");
         bottomPanel.add(customerButton);
+        promoButton = new JButton("Kelola Promo");
+        bottomPanel.add(promoButton);
+        logoutButton = new JButton("Logout"); 
+        bottomPanel.add(logoutButton);
         add(bottomPanel, BorderLayout.SOUTH);
         
         
         ProductForm = new ProductForm(this);
-        FormPenjualan = new FormPenjualan(this, ProductForm); 
+        PromoForm = new PromoForm();
+        FormPenjualan = new FormPenjualan(this, ProductForm, PromoForm); 
         CustomerForm = new CustomerForm(this); 
         
         addProductButton.addActionListener(e -> {
@@ -56,8 +64,14 @@ public class Mavenproject3 extends JFrame implements Runnable {
         customerButton.addActionListener(e -> {
             CustomerForm.setVisible(true);
         });
+        promoButton.addActionListener(e -> {
+            PromoForm.setVisible(true);
+        });
+        logoutButton.addActionListener(e -> {
+            performLogout();
+            }
+        );
         
-
         setVisible(true);
 
         Thread thread = new Thread(this);
@@ -103,6 +117,20 @@ public class Mavenproject3 extends JFrame implements Runnable {
     bannerPanel.repaint(); 
 }
     
+    private void performLogout() {
+        Session.clear();
+        Window[] windows = Window.getWindows();
+        for (Window window : windows) {
+            if (window instanceof JFrame) {
+                window.dispose();
+            }
+        }
+
+        SwingUtilities.invokeLater(() -> {
+            new Login().setVisible(true);
+        });
+    }
+    
     public void gui(){
         String text = "";
             for (Product p : ProductManager.getProducts()) {
@@ -116,6 +144,8 @@ public class Mavenproject3 extends JFrame implements Runnable {
 
             Mavenproject3 gui = new Mavenproject3("Menu yang tersedia: " + text);
     }
+    
+    
 
 
 

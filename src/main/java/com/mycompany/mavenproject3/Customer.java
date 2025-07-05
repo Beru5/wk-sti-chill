@@ -9,7 +9,6 @@ public class Customer {
     private String telp;
     private LocalDate ultah;
 
-    // Default constructor for JSON deserialization
     public Customer() {}
 
     public Customer(String nama, String telp, String ultah) {
@@ -25,7 +24,6 @@ public class Customer {
         setUltah(ultah);
     }
 
-    // Getters and setters
     public int getId() { 
         return id; 
     }

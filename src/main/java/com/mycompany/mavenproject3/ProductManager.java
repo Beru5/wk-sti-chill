@@ -36,7 +36,6 @@ public class ProductManager {
                 try (BufferedReader reader = new BufferedReader(
                     new InputStreamReader(conn.getInputStream()))) {
                     
-                    // Parse JSON array into Product array
                     Product[] products = gson.fromJson(reader, Product[].class);
                     return Arrays.asList(products);
                 }
@@ -47,7 +46,7 @@ public class ProductManager {
             System.err.println("Error fetching products: " + e.getMessage());
             e.printStackTrace();
         }
-        return Collections.emptyList(); // Return empty list instead of null
+        return Collections.emptyList(); 
     }
 
     public static void addProduct(Product product) {
@@ -119,15 +118,12 @@ public class ProductManager {
     
 public static boolean updateProductStock(int productId, int quantityToReduce) {
     try {
-        // 1. Dapatkan produk yang ada
         Product existingProduct = getProductById(productId);
         if (existingProduct == null) return false;
         
-        // 2. Hitung stok baru
         int newStock = existingProduct.getStock() - quantityToReduce;
         if (newStock < 0) return false;
         
-        // 3. Buat produk yang diupdate
         Product updatedProduct = new Product(
             existingProduct.getId(),
             existingProduct.getCode(),
@@ -137,7 +133,6 @@ public static boolean updateProductStock(int productId, int quantityToReduce) {
             newStock
         );
         
-        // 4. Update via API
         URL url = new URL(API_URL + "/" + productId);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("PUT");
@@ -178,14 +173,14 @@ public static Product findByName(String name) {
     try {
         List<Product> products = getProducts();
         for (Product p : products) {
-            if (p.getName().equalsIgnoreCase(name)) {  // Case-insensitive comparison
+            if (p.getName().equalsIgnoreCase(name)) {  
                 return p;
             }
         }
     } catch (Exception e) {
         e.printStackTrace();
     }
-    return null;  // Return null jika tidak ditemukan atau error
+    return null;  
 }
 
 public static int indexOfProduct(Product product) {
@@ -215,7 +210,7 @@ public static int indexOfProduct(Product product) {
     try {
         URL url = new URL(API_URL + "/" + product.getId());
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("PUT");  // Pastikan method PUT
+        conn.setRequestMethod("PUT");  
         conn.setRequestProperty("Content-Type", "application/json");
         conn.setDoOutput(true);
 
@@ -223,7 +218,7 @@ public static int indexOfProduct(Product product) {
             String json = gson.toJson(product);
             os.write(json.getBytes("UTF-8"));
         }
-        return conn.getResponseCode() == 200;  // Cek status code
+        return conn.getResponseCode() == 200;  
     } catch (Exception e) {
         e.printStackTrace();
         return false;

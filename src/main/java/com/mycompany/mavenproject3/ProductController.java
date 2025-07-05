@@ -44,7 +44,6 @@ public class ProductController {
     
     @GetMapping("/{id}")
 public ResponseEntity<Product> getProductById(@PathVariable("id") int id) {
-    System.out.println("GET product by ID: " + id);
     String query = "SELECT * FROM product WHERE id = ?";
     
     try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/wk sti", "root", "");
@@ -62,7 +61,6 @@ public ResponseEntity<Product> getProductById(@PathVariable("id") int id) {
                 rs.getDouble("price"),
                 rs.getInt("stock")
             );
-            System.out.println("Found product: " + product.getName());
             return ResponseEntity.ok(product);
         } else {
             System.out.println("No product found with ID: " + id);

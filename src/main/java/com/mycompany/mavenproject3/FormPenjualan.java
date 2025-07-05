@@ -9,9 +9,9 @@ import java.awt.event.ItemEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.time.LocalDate; // Import for LocalDate
-import java.time.format.DateTimeFormatter; // Import for DateTimeFormatter
-import java.time.format.DateTimeParseException; // Import for DateTimeParseException
+import java.time.LocalDate; 
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 public class FormPenjualan extends JFrame {
     private JComboBox<String> namaBox;
@@ -40,10 +40,12 @@ public class FormPenjualan extends JFrame {
 
     private Mavenproject3 gui;
     private ProductForm ProductForm;
+    private PromoForm PromoForm;
 
-    public FormPenjualan(Mavenproject3 gui, ProductForm ProductForm) {
+    public FormPenjualan(Mavenproject3 gui, ProductForm ProductForm, PromoForm PromoForm) {
         this.gui = gui;
         this.ProductForm = ProductForm;
+        this.PromoForm = PromoForm;
         Locale.setDefault(new Locale("id", "ID"));
 
         setTitle("WK. Cuan | Jual Barang");
@@ -113,12 +115,12 @@ public class FormPenjualan extends JFrame {
 
         rightPanel.add(new JLabel("Pilih Promo:"));
         promoComboBox = new JComboBox<>();
-        rightPanel.add(promoComboBox); // Add to panel here, content will be refreshed later
+        rightPanel.add(promoComboBox); 
 
         processButton = new JButton("Process");
         rightPanel.add(processButton);
 
-        refreshButton = new JButton("Refresh Produk");
+        refreshButton = new JButton("Refresh Form");
         rightPanel.add(refreshButton);
 
         add(rightPanel, BorderLayout.EAST);
@@ -140,28 +142,27 @@ public class FormPenjualan extends JFrame {
         summaryPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
 
         summaryPanel.add(new JLabel("No. Telp   :"));
-        customerTelpField = new JTextField(); // Initialize customerTelpField
+        customerTelpField = new JTextField(); 
         summaryPanel.add(customerTelpField);
 
         summaryPanel.add(new JLabel("Sub    : Rp."));
-        subtotalDisplayField = new JTextField("0"); // Initialize subtotalDisplayField
+        subtotalDisplayField = new JTextField("0"); 
         subtotalDisplayField.setEditable(false);
         summaryPanel.add(subtotalDisplayField);
 
         summaryPanel.add(new JLabel("Disc   : Rp."));
-        diskonDisplayField = new JTextField("0"); // Initialize diskonDisplayField
+        diskonDisplayField = new JTextField("0"); 
         diskonDisplayField.setEditable(false);
         summaryPanel.add(diskonDisplayField);
 
         summaryPanel.add(new JLabel("Total  : Rp."));
-        totalLabel = new JLabel("0"); // Initialize totalLabel
+        totalLabel = new JLabel("0"); 
         totalLabel.setFont(totalLabel.getFont().deriveFont(Font.BOLD, 16));
         summaryPanel.add(totalLabel);
 
         leftPanel.add(summaryPanel, BorderLayout.SOUTH);
         add(leftPanel, BorderLayout.CENTER);
 
-        // Now that all fields are initialized, it's safe to call these methods
         refreshPromoComboBox();
         checkCustomerTelpStatusInitial();
 
@@ -173,7 +174,7 @@ public class FormPenjualan extends JFrame {
         });
         refreshComboBox();
 
-        refreshButton.addActionListener(e -> refreshComboBox());
+        refreshButton.addActionListener(e -> refreshForm());
 
         addToCartButton.addActionListener(e -> {
             int selectedIndex = namaBox.getSelectedIndex();
@@ -291,7 +292,6 @@ processButton.addActionListener(e -> {
         return;
     }
 
-    // Validasi pelanggan
     String customerTelp = customerTelpField.getText().trim();
     if (!customerTelp.isEmpty()) {
         boolean customerExists = CustomerManager.getCustomers().stream()
@@ -305,7 +305,6 @@ processButton.addActionListener(e -> {
         }
     }
 
-    // Proses pengurangan stok
     boolean allStockUpdated = true;
     StringBuilder errorMessages = new StringBuilder();
     
@@ -320,7 +319,6 @@ processButton.addActionListener(e -> {
             continue;
         }
         
-        // Get the current product from database to ensure we have latest stock
         Product currentProduct = ProductManager.getProductById(product.getId());
         if (currentProduct == null) {
             errorMessages.append("Produk '").append(productName).append("' tidak ditemukan di database\n");
@@ -334,14 +332,12 @@ processButton.addActionListener(e -> {
         }
     }
 
-    // Proses promo jika semua stok berhasil diupdate
     if (allStockUpdated) {
         Promo selectedPromo = (Promo) promoComboBox.getSelectedItem();
         if (selectedPromo != null && !selectedPromo.getNama().equals("Tidak Ada Promo")) {
-            PromoManager.decreasePromoStock(selectedPromo.getNama());
+            PromoManager.decreasePromoStock(selectedPromo.getId());
         }
         
-        // Reset form jika sukses
         cartTableModel.setRowCount(0);
         customerTelpField.setText("");
         JOptionPane.showMessageDialog(this, "Transaksi berhasil!");
@@ -351,10 +347,11 @@ processButton.addActionListener(e -> {
             "Error", 
             JOptionPane.ERROR_MESSAGE);
     }
-
-    // Refresh data
+    
+    updateFields();
     updateTotal();
     ProductForm.loadProductData();
+    PromoForm.loadPromoData();
     refreshPromoComboBox();
 });}
 
@@ -406,49 +403,12 @@ processButton.addActionListener(e -> {
 
     private void refreshPromoComboBox() {
         promoComboBox.removeAllItems();
-        promoComboBox.addItem(new Promo("Tidak Ada Promo", 0.0, 1, "2019-12-01")); // Default "No Promo"
+        promoComboBox.addItem(new Promo("Tidak Ada Promo", 0.0, 1, "2019-12-01"));
 
         LocalDate today = LocalDate.now();
         for (Promo p : PromoManager.getPromos()) {
-            // Check if promo is not expired and has stock
             if ((p.getTanggalAkhir().isAfter(today) || p.getTanggalAkhir().isEqual(today)) && p.getStokPromo() > 0) {
                 promoComboBox.addItem(p);
-            }
-        }
-
-        // Check for birthday promo only if a customer is linked and has a birthday
-        if (!customerTelpField.getText().trim().isEmpty()) {
-            Customer currentCustomer = null;
-            for (Customer c : CustomerManager.getCustomers()) {
-                if (c.getTelp().equals(customerTelpField.getText().trim())) {
-                    currentCustomer = c;
-                    break;
-                }
-            }
-
-            if (currentCustomer != null && currentCustomer.getUltah() != null) {
-                if (currentCustomer.getUltah().getMonth() == today.getMonth() &&
-                    currentCustomer.getUltah().getDayOfMonth() == today.getDayOfMonth()) {
-
-                    Promo birthdayPromo = PromoManager.getPromoByName("Promo Ulang Tahun");
-                    // Ensure birthday promo exists, is not expired, and has stock
-                    if (birthdayPromo != null &&
-                        (birthdayPromo.getTanggalAkhir().isAfter(today) || birthdayPromo.getTanggalAkhir().isEqual(today)) &&
-                        birthdayPromo.getStokPromo() > 0) {
-
-                        boolean alreadyAdded = false;
-                        for (int i = 0; i < promoComboBox.getItemCount(); i++) {
-                            if (promoComboBox.getItemAt(i).getNama().equals("Promo Ulang Tahun")) {
-                                alreadyAdded = true;
-                                break;
-                            }
-                        }
-                        if (!alreadyAdded) {
-                            promoComboBox.addItem(birthdayPromo);
-                            JOptionPane.showMessageDialog(this, "Pelanggan berulang tahun! Promo Ulang Tahun tersedia.", "Promo Aktif", JOptionPane.INFORMATION_MESSAGE);
-                        }
-                    }
-                }
             }
         }
 
@@ -476,5 +436,10 @@ processButton.addActionListener(e -> {
         diskonDisplayField.setText(String.format("%,.0f", diskonAmount));
         double total = subtotal - diskonAmount;
         totalLabel.setText(String.format("%,.0f", total));
+    }
+    private void refreshForm(){
+        updateFields();
+        updateTotal();
+        refreshPromoComboBox();
     }
 }

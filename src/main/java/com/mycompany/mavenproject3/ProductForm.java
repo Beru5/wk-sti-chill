@@ -34,12 +34,11 @@ public class ProductForm extends JFrame {
         this.gui = gui;
         
         setTitle("WK. Cuan | Stok Barang");
-        setSize(700, 450); // Increased width to accommodate ID column
+        setSize(700, 450); 
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
         
-        // Panel form
         JPanel formPanel = new JPanel();
         formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.Y_AXIS));
         formPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -64,7 +63,6 @@ public class ProductForm extends JFrame {
         stockField = new JTextField();
         formPanel.add(stockField);
         
-        // Button panel
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         addButton = new JButton("Tambah");
         editButton = new JButton("Edit");
@@ -76,11 +74,10 @@ public class ProductForm extends JFrame {
         formPanel.add(buttonPanel);
         add(formPanel, BorderLayout.EAST);
         
-        // Table setup
         tableModel = new DefaultTableModel(new String[]{"ID", "Kode", "Nama", "Kategori", "Harga Jual", "Stok"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return false; // Make all cells non-editable
+                return false; 
             }
         };
         
@@ -104,10 +101,8 @@ public class ProductForm extends JFrame {
         JScrollPane scrollPane = new JScrollPane(drinkTable);
         add(scrollPane, BorderLayout.CENTER);
         
-        // Load initial data
         loadProductData();
         
-        // Button actions
         setupButtonActions();
     }
     
@@ -177,7 +172,7 @@ public class ProductForm extends JFrame {
         });
     }
     
-    public void loadProductData() {
+    void loadProductData() {
         tableModel.setRowCount(0);
         List<Product> products = ProductManager.getProducts();
         for (Product product : products) {
