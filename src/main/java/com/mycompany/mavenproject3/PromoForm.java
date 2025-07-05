@@ -16,12 +16,14 @@ import java.awt.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Date;
+import com.toedter.calendar.JDateChooser; 
 
 public class PromoForm extends JFrame {
     private JTextField namaField;
     private JTextField diskonField;
     private JTextField stokField;
-    private JTextField tanggalAkhirField;
+    private JDateChooser tanggalAkhirDateChooser;
     private JTable table;
     private DefaultTableModel tableModel;
     private JButton addButton;
@@ -51,10 +53,12 @@ public class PromoForm extends JFrame {
         formPanel.add(new JLabel("Stok Promo:"));
         stokField = new JTextField();
         formPanel.add(stokField);
+        
+        formPanel.add(new JLabel("Tanggal Akhir Promo:"));
+        tanggalAkhirDateChooser = new JDateChooser();
+        tanggalAkhirDateChooser.setDateFormatString("yyyy-MM-dd"); 
+        formPanel.add(tanggalAkhirDateChooser); 
 
-        formPanel.add(new JLabel("Tanggal Akhir (YYYY-MM-DD):"));
-        tanggalAkhirField = new JTextField();
-        formPanel.add(tanggalAkhirField);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         addButton = new JButton("Tambah");
@@ -88,7 +92,16 @@ public class PromoForm extends JFrame {
                 namaField.setText(tableModel.getValueAt(selectedRow, 1).toString());
                 diskonField.setText(tableModel.getValueAt(selectedRow, 2).toString());
                 stokField.setText(tableModel.getValueAt(selectedRow, 3).toString());
-                tanggalAkhirField.setText(tableModel.getValueAt(selectedRow, 4).toString());
+                String tanggalStr = tableModel.getValueAt(selectedRow, 4).toString();
+                try {
+                    LocalDate dateFromTable = LocalDate.parse(tanggalStr, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+
+                    tanggalAkhirDateChooser.setDate(java.sql.Date.valueOf(dateFromTable));
+                } 
+                catch (Exception ex) {
+                    System.err.println("Error parsing date from table: " + tanggalStr);
+                    tanggalAkhirDateChooser.setDate(null);
+                }
             }
         });
 
@@ -103,13 +116,20 @@ public class PromoForm extends JFrame {
             String nama = namaField.getText().trim();
             double diskon = Double.parseDouble(diskonField.getText().trim());
             int stok = Integer.parseInt(stokField.getText().trim());
-            String tanggalAkhir = tanggalAkhirField.getText().trim();
-            LocalDate.parse(tanggalAkhir);
+            Date selectedDate = tanggalAkhirDateChooser.getDate();
+            if (selectedDate == null) {
+                JOptionPane.showMessageDialog(this, "Tanggal Akhir tidak boleh kosong.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            LocalDate tanggalAkhirLocalDate = new java.sql.Date(selectedDate.getTime()).toLocalDate();
+            String tanggalAkhir = tanggalAkhirLocalDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+
 
             Promo newPromo = new Promo(nama, diskon, stok, tanggalAkhir);
             PromoManager.addPromo(newPromo);
             loadPromoData();
             clearFields();
+
         } catch (DateTimeParseException ex) {
             JOptionPane.showMessageDialog(this, "Format tanggal tidak valid. Gunakan YYYY-MM-DD.", "Error", JOptionPane.ERROR_MESSAGE);
         } catch (NumberFormatException ex) {
@@ -130,7 +150,13 @@ public class PromoForm extends JFrame {
             String nama = namaField.getText().trim();
             double diskon = Double.parseDouble(diskonField.getText().trim());
             int stok = Integer.parseInt(stokField.getText().trim());
-            String tanggalAkhir = tanggalAkhirField.getText().trim();
+            Date selectedDate = tanggalAkhirDateChooser.getDate();
+            if (selectedDate == null) {
+                JOptionPane.showMessageDialog(this, "Tanggal Akhir tidak boleh kosong.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            LocalDate tanggalAkhirLocalDate = new java.sql.Date(selectedDate.getTime()).toLocalDate();
+            String tanggalAkhir = tanggalAkhirLocalDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
             LocalDate.parse(tanggalAkhir);
 
@@ -179,7 +205,6 @@ public class PromoForm extends JFrame {
         namaField.setText("");
         diskonField.setText("");
         stokField.setText("");
-        tanggalAkhirField.setText("");
         selectedPromoId = -1; 
     }
 }

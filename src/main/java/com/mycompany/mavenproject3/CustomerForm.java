@@ -7,11 +7,14 @@ import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.Date;
+import com.toedter.calendar.JDateChooser; 
+import java.time.format.DateTimeFormatter;
 
 public class CustomerForm extends JFrame {
     private JTextField namaField;
     private JTextField telpField;
-    private JTextField ultahField;
+    private JDateChooser ultahDateChooser;
     private JTable table;
     private DefaultTableModel tableModel;
     private JButton addButton;
@@ -40,9 +43,10 @@ public class CustomerForm extends JFrame {
         telpField = new JTextField();
         formPanel.add(telpField);
 
-        formPanel.add(new JLabel("Tanggal Ulang Tahun (YYYY-MM-DD):"));
-        ultahField = new JTextField();
-        formPanel.add(ultahField);
+        formPanel.add(new JLabel("Tanggal Ulang Tahun:"));
+        ultahDateChooser = new JDateChooser();
+        ultahDateChooser.setDateFormatString("yyyy-MM-dd"); 
+        formPanel.add(ultahDateChooser); 
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         addButton = new JButton("Tambah");
@@ -69,22 +73,30 @@ public class CustomerForm extends JFrame {
                     int selectedRow = table.getSelectedRow();
                     namaField.setText(tableModel.getValueAt(selectedRow, 1).toString());
                     telpField.setText(tableModel.getValueAt(selectedRow, 2).toString());
-                    Object ultahObj = tableModel.getValueAt(selectedRow, 3);
-                    if (ultahObj instanceof LocalDate) {
-                         ultahField.setText(((LocalDate) ultahObj).toString());
-                    } else if (ultahObj != null) {
-                         ultahField.setText(ultahObj.toString());
-                    } else {
-                         ultahField.setText("");
-                    }
+                    String tanggalStr = tableModel.getValueAt(selectedRow, 3).toString();
+                try {
+                    LocalDate dateFromTable = LocalDate.parse(tanggalStr, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+
+                    ultahDateChooser.setDate(java.sql.Date.valueOf(dateFromTable));
+                } 
+                catch (Exception ex) {
+                    System.err.println("Error parsing date from table: " + tanggalStr);
+                    ultahDateChooser.setDate(null);
                 }
             }
-        });
+        }});
 
         addButton.addActionListener(e -> {
             String nama = namaField.getText().trim();
             String telp = telpField.getText().trim();
-            String ultah = ultahField.getText().trim();
+            Date selectedDate = ultahDateChooser.getDate();
+            if (selectedDate == null) {
+                JOptionPane.showMessageDialog(this, "Tanggal Akhir tidak boleh kosong.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            LocalDate ultahLocalDate = new java.sql.Date(selectedDate.getTime()).toLocalDate();
+            String ultah = ultahLocalDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+
 
             if (nama.isEmpty() || telp.isEmpty() || ultah.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Semua kolom harus diisi.", "Input Error", JOptionPane.ERROR_MESSAGE);
@@ -98,7 +110,6 @@ public class CustomerForm extends JFrame {
                 loadCustomerData();
                 namaField.setText("");
                 telpField.setText("");
-                ultahField.setText("");
             } catch (DateTimeParseException ex) {
                 JOptionPane.showMessageDialog(this, "Format tanggal ulang tahun tidak valid. Gunakan YYYY-MM-DD.", "Input Error", JOptionPane.ERROR_MESSAGE);
             } catch (Exception ex) {
@@ -115,7 +126,14 @@ public class CustomerForm extends JFrame {
 
             String nama = namaField.getText().trim();
             String telp = telpField.getText().trim();
-            String ultah = ultahField.getText().trim();
+            Date selectedDate = ultahDateChooser.getDate();
+            if (selectedDate == null) {
+                JOptionPane.showMessageDialog(this, "Tanggal Akhir tidak boleh kosong.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            LocalDate tanggalAkhirLocalDate = new java.sql.Date(selectedDate.getTime()).toLocalDate();
+            String ultah = tanggalAkhirLocalDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+
 
             if (nama.isEmpty() || telp.isEmpty() || ultah.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Semua kolom harus diisi.", "Input Error", JOptionPane.ERROR_MESSAGE);
@@ -131,7 +149,6 @@ public class CustomerForm extends JFrame {
                 loadCustomerData();
                 namaField.setText("");
                 telpField.setText("");
-                ultahField.setText("");
             } catch (DateTimeParseException ex) {
                 JOptionPane.showMessageDialog(this, "Format tanggal ulang tahun tidak valid. Gunakan YYYY-MM-DD.", "Input Error", JOptionPane.ERROR_MESSAGE);
             } catch (Exception ex) {
@@ -148,7 +165,6 @@ public class CustomerForm extends JFrame {
                 loadCustomerData();
                 namaField.setText("");
                 telpField.setText("");
-                ultahField.setText("");
             }
         });
     }
